@@ -1,15 +1,27 @@
 -module(xmerl_simple).
 
--export([xml_in/1]).
+-export([xml_in/1, xml_out/2]).
 
 -include("erlang_resources_common.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
+
+xml_out(TName, Dict) ->
+  case empty_dict(Dict) of
+  false -> {ok};
+  true -> lists:flatten(
+   xmerl:export_simple(
+   [list_to_atom(TName)],
+   xmerl_xml)
+  )
+  end.
 
 xml_in(XmlStr) ->
   case xmerl_scan:string(XmlStr) of
   {XmerlStructure, _ } -> process_structure(XmerlStructure);
   _ -> ok
   end.
+
+empty_dict(Dict) -> dict:size(Dict) == 0.
 
 process_structure(#xmlElement{content = Contents} = Ele) -> 
   case children_type(Contents) of
@@ -112,5 +124,12 @@ more_complex_content_parser_test() ->
   ]),
   Result = (xml_in(XmlText)),
   ?assertEqual(ExpectedData, Result).
+
+
+simple_xml_out_test() ->
+  ExpectedString = "<?xml version=\"1.0\"?><root-node23/>",
+  Data = dict:new(),
+  Result = xml_out("root-node23", Data),
+  ?assertEqual(ExpectedString, Result).
 
 -endif.
