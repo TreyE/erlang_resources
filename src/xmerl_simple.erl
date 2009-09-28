@@ -45,8 +45,9 @@ process_to_content(Val) when is_integer(Val) -> [integer_to_list(Val)];
 process_to_content(Val) -> tagify_dict(Val).
 
 
-
-xml_in(XmlStr) ->
+xml_in(XmlStr) when is_binary(XmlStr) ->
+  xml_in(binary_to_list(XmlStr));
+xml_in(XmlStr) when is_list(XmlStr) ->
   case xmerl_scan:string(XmlStr) of
   {XmerlStructure, _ } -> process_structure(XmerlStructure);
   _ -> ok
@@ -88,6 +89,7 @@ process_text_children(#xmlElement{} = Child) ->
   case get_attribute_value(type, Child) of 
     "integer" -> integer_cast(join_text_children(Child));
     "string" -> list_to_binary(join_text_children(Child));
+    "datetime" -> list_to_binary(join_text_children(Child));
     undefined -> list_to_binary(join_text_children(Child))
   end.
 

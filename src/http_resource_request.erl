@@ -57,10 +57,13 @@ clean_base(Uri) ->
     ResultString = uri:to_string(single_resource_uri(uri:from_string("http://testing-resources:8080"), "resource", "523")),
     ?assertEqual(ExpectedString, ResultString).
 
-%%  simple_list_test() ->
-%%    Uri = all_resources_uri(uri:from_string("http://testing-resources/"), "host_users"),
-%%    {ok, {Status, Body}}= make_request(Uri, get),
-%%    ?assertEqual(200, Status),
-%%    ?assert(is_binary(Body)).
+  simple_list_test() ->
+    Uri = all_resources_uri(uri:from_string("http://testing-resources/"), "host_users"),
+    {ok, {Status, Body}}= make_request(Uri, get),
+    Records = xmerl_simple:xml_in(Body),
+    RList = dict:fetch("host-user", Records),
+    ?assert(is_list(RList)),
+    ?assertEqual(200, Status),
+    ?assert(is_binary(Body)).
    
 -endif.

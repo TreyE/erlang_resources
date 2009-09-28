@@ -8,6 +8,9 @@
               http_resource_request,
               xmerl_simple]},
    {registered,[erlang_resources_sup]},
+   {versioned_dependencies, [
+     {inets,"1.5", gte}
+   ]},
    {applications, [kernel, stdlib, inets]},
    {mod, {erlang_resources_app,[]}},
    {start_phases, []}]}.
