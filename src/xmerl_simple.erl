@@ -7,13 +7,32 @@
 
 xml_out(TName, Dict) ->
   case empty_dict(Dict) of
-  false -> {ok};
+  false -> lists:flatten(
+   xmerl:export_simple(
+   [{list_to_atom(TName), tagify_content(Dict)}],
+   xmerl_xml)
+  );
   true -> lists:flatten(
    xmerl:export_simple(
    [list_to_atom(TName)],
    xmerl_xml)
   )
   end.
+
+tagify_content(Dict) ->
+  KeyList = dict:fetch_keys(Dict),
+  lists:map(tagify_key_value_with_dict(Dict), KeyList).
+
+tagify_key_value_with_dict(Dict) ->
+  fun(X) ->
+    Val = dict:fetch(X, Dict),
+    {list_to_atom(X), process_to_content(X, Val) }
+  end.
+
+process_to_content(X, Val) when is_binary(Val) -> [binary_to_list(Val)];
+process_to_content(X, Val) when is_float(Val) -> [float_to_list(Val)];
+process_to_content(X, Val) when is_integer(Val) -> [integer_to_list(Val)];
+process_to_content(X, Val) when is_list(Val) -> ["LIST"].
 
 xml_in(XmlStr) ->
   case xmerl_scan:string(XmlStr) of
@@ -130,6 +149,31 @@ simple_xml_out_test() ->
   ExpectedString = "<?xml version=\"1.0\"?><root-node23/>",
   Data = dict:new(),
   Result = xml_out("root-node23", Data),
+  ?assertEqual(ExpectedString, Result).
+
+complex_xml_out_test() ->
+  ExpectedString = "<?xml version=\"1.0\"?><rootnode><propertystring>HI</propertystring><propertyint>1</propertyint></rootnode>",
+  Data = dict:from_list([
+    {"propertyint", 1},
+    {"propertystring", <<"HI">>}
+  ]),
+  Result = xml_out("rootnode", Data),
+  ?assertEqual(ExpectedString, Result).
+
+more_complex_content_out_test() ->
+  ExpectedString = "<?xml version='1.0' standalone='yes'?><processes><process><logfile>/tmp/garbiage</logfile><category>Testing</category><commandstring>tail -f /var/log/messages</commandstring></process><process>fred</process><process>jake</process></processes>",
+  Data = dict:from_list([
+    {
+      "process", 
+      [dict:from_list([
+        {"logfile", <<"/tmp/garbiage">>},
+        {"category", <<"Testing">>},
+        {"commandstring", <<"tail -f /var/log/messages">>}
+      ]),
+      <<"fred">>, <<"jake">>]
+    }
+  ]),
+  Result = xml_out("processes", Data),
   ?assertEqual(ExpectedString, Result).
 
 -endif.
