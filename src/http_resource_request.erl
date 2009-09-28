@@ -1,6 +1,6 @@
 -module(http_resource_request).
 
--export([create/4, update/5, delete/3, fetch/3, request_full_list/2]).
+-export([create/2, update/3, delete/2, fetch/2, request_full_list/2]).
 
 -include("erlang_resources_common.hrl").
 
@@ -13,7 +13,7 @@
   {body_format, binary}
 ]).
 
-create(BUri, RName, RTagName, Dict) ->
+create({BUri, RName, RTagName}, Dict) ->
   Body = xmerl_simple:xml_out(RTagName, Dict),
   Uri = all_resources_uri(BUri, RName),
   case make_bodied(Uri, post, Body) of
@@ -21,7 +21,7 @@ create(BUri, RName, RTagName, Dict) ->
     A -> A
   end.
   
-update(BUri, RName, RId, RTagName, Dict) ->
+update({BUri, RName, RTagName}, RId, Dict) ->
   Body = xmerl_simple:xml_out(RTagName, Dict),
   Uri = single_resource_uri(BUri, RName, RId),
   case make_bodied(Uri, put, Body) of
@@ -29,14 +29,14 @@ update(BUri, RName, RId, RTagName, Dict) ->
     A -> A
   end.
 
-delete(BUri, RName, RId) ->
+delete({BUri, RName, _}, RId) ->
   Uri = single_resource_uri(BUri, RName, RId),
   case make_simple_request(Uri, delete) of
     {ok, _} -> ok;
     A -> A
   end.
 
-fetch(BUri, RName, RId) ->
+fetch({BUri, RName, _}, RId) ->
   Uri = single_resource_uri(BUri, RName, RId),
   case make_simple_request(Uri, get) of
     {ok, {_, Body}} -> xmerl_simple:xml_in(Body);
@@ -114,14 +114,15 @@ clean_base(Uri) ->
     UDict = dict:from_list([
       {"host", <<"somebody">>}
     ]),
-    ObjDict = create(uri:from_string("http://testing-resources"), "host_users", "host-user", VDict),
+    BLoc = {uri:from_string("http://testing-resources"), "host_users", "host-user"},
+    ObjDict = create(BLoc, VDict),
     RId = integer_to_list(dict:fetch("id", ObjDict)),
     ?assertEqual(<<"test">>, dict:fetch("host", ObjDict)),
-    UpObjResp = update(uri:from_string("http://testing-resources"), "host_users", RId, "host-user", UDict),
+    UpObjResp = update(BLoc, RId, UDict),
     ?assertEqual(ok, UpObjResp),
-    UpObj = fetch(uri:from_string("http://testing-resources"), "host_users", RId),
+    UpObj = fetch(BLoc, RId),
     ?assertEqual(<<"somebody">>, dict:fetch("host", UpObj)),
-    DelObjResp = delete(uri:from_string("http://testing-resources"), "host_users", RId),
+    DelObjResp = delete(BLoc, RId),
     ?assertEqual(ok, DelObjResp).
 
 -endif.
