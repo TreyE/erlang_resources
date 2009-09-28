@@ -6,7 +6,8 @@
    {modules, [erlang_resources_app,
               erlang_resources_sup,
               http_resource_request,
-              xmerl_simple]},
+              xmerl_simple,
+              http_resource_registry]},
    {registered,[erlang_resources_sup]},
    {versioned_dependencies, [
      {inets,"1.5", gte}
