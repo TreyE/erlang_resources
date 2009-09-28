@@ -33,12 +33,18 @@
 %% @end
 %%--------------------------------------------------------------------
 start(_StartType, _StartArgs) ->
-    case erlang_resources_sup:start_link() of
+    case erlang_resources_sup:start_link(resource_vals()) of
         {ok, Pid} ->
             {ok, Pid};
         Error ->
             Error
     end.
+
+resource_vals() ->
+  case application:get_env(erlang_resources, http_resources) of
+    {ok, Val} -> Val;
+    undefined -> []
+  end.
 
 %%--------------------------------------------------------------------
 %% @private
