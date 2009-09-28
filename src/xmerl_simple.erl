@@ -9,7 +9,7 @@ xml_out(TName, Dict) ->
   case empty_dict(Dict) of
   false -> lists:flatten(
    xmerl:export_simple(
-   [{list_to_atom(TName), tagify_content(Dict)}],
+   [{list_to_atom(TName), tagify_dict( Dict)}],
    xmerl_xml)
   );
   true -> lists:flatten(
@@ -19,20 +19,32 @@ xml_out(TName, Dict) ->
   )
   end.
 
-tagify_content(Dict) ->
+tagify_dict(Dict) ->
   KeyList = dict:fetch_keys(Dict),
-  lists:map(tagify_key_value_with_dict(Dict), KeyList).
+  tagify_list(Dict, KeyList, []).
 
-tagify_key_value_with_dict(Dict) ->
+tagify_list(Dict, [Key|Rest], RList) ->
+  Val = dict:fetch(Key, Dict),
+  NList = case is_list(Val) of
+    false -> 
+      lists:append(RList, [{list_to_atom(Key), process_to_content(Val)}]);
+    true ->
+      lists:append(RList, lists:map(tagify_with_name(Key), Val)) 
+  end, 
+  tagify_list(Dict, Rest, NList);
+tagify_list(_, [], RList) -> RList.
+
+tagify_with_name(TName) ->
   fun(X) ->
-    Val = dict:fetch(X, Dict),
-    {list_to_atom(X), process_to_content(X, Val) }
+    {list_to_atom(TName), process_to_content(X)}
   end.
 
-process_to_content(X, Val) when is_binary(Val) -> [binary_to_list(Val)];
-process_to_content(X, Val) when is_float(Val) -> [float_to_list(Val)];
-process_to_content(X, Val) when is_integer(Val) -> [integer_to_list(Val)];
-process_to_content(X, Val) when is_list(Val) -> ["LIST"].
+process_to_content(Val) when is_binary(Val) -> [binary_to_list(Val)];
+process_to_content(Val) when is_float(Val) -> [float_to_list(Val)];
+process_to_content(Val) when is_integer(Val) -> [integer_to_list(Val)];
+process_to_content(Val) -> tagify_dict(Val).
+
+
 
 xml_in(XmlStr) ->
   case xmerl_scan:string(XmlStr) of
@@ -161,7 +173,7 @@ complex_xml_out_test() ->
   ?assertEqual(ExpectedString, Result).
 
 more_complex_content_out_test() ->
-  ExpectedString = "<?xml version='1.0' standalone='yes'?><processes><process><logfile>/tmp/garbiage</logfile><category>Testing</category><commandstring>tail -f /var/log/messages</commandstring></process><process>fred</process><process>jake</process></processes>",
+  ExpectedString = "<?xml version=\"1.0\"?><processes><process><logfile>/tmp/garbiage</logfile><commandstring>tail -f /var/log/messages</commandstring><category>Testing</category></process><process>fred</process><process>jake</process></processes>",
   Data = dict:from_list([
     {
       "process", 
