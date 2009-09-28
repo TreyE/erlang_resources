@@ -89,8 +89,8 @@ process_text_children(#xmlElement{} = Child) ->
   case get_attribute_value(type, Child) of 
     "integer" -> integer_cast(join_text_children(Child));
     "string" -> list_to_binary(join_text_children(Child));
-    "datetime" -> list_to_binary(join_text_children(Child));
-    undefined -> list_to_binary(join_text_children(Child))
+    undefined -> list_to_binary(join_text_children(Child));
+    _ -> list_to_binary(join_text_children(Child))
   end.
 
 is_not_text_element(#xmlElement{} = _Ele) -> true;
