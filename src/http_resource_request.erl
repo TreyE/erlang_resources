@@ -96,6 +96,8 @@ clean_base(Uri) ->
     ResultString = uri:to_string(single_resource_uri(uri:from_string("http://testing-resources:8080"), "resource", "523")),
     ?assertEqual(ExpectedString, ResultString).
 
+
+-ifdef(TESTINGHTTP).
   simple_list_test() ->
     Uri = all_resources_uri(uri:from_string("http://testing-resources/"), "host_users"),
     {ok, {Status, Body}}= make_simple_request(Uri, get),
@@ -124,5 +126,6 @@ clean_base(Uri) ->
     ?assertEqual(<<"somebody">>, dict:fetch("host", UpObj)),
     DelObjResp = delete(BLoc, RId),
     ?assertEqual(ok, DelObjResp).
+-endif.
 
 -endif.
