@@ -1,9 +1,7 @@
 %%%----------------------------------------------------------------
 %%% @author  Trey Evans <lewis.r.evans@gmail.com>
-%%% @doc
-%%% @end
 %%% @copyright 2009 Trey Evans
-%%%----------------------------------------------------------------
+%%% @end
 -module(erlang_resources_sup).
 
 -behaviour(supervisor).
@@ -21,10 +19,13 @@
 %%%===================================================================
 
 %%--------------------------------------------------------------------
+%% @private
 %% @doc
 %% Starts the supervisor
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
+%% @spec start_link(Args) -> {ok, Pid} | ignore | {error, Error}
+%%         Args = [DictElement]
+%%         DictElement = {string() | atom(), http_resource_registry:resource_configuration()}
 %% @end
 %%--------------------------------------------------------------------
 start_link(Args) ->

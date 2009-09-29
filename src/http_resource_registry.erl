@@ -1,17 +1,14 @@
-%%%-------------------------------------------------------------------
-%%% @author trey <trey@trey-laptop>
-%%% @copyright (C) 2009, trey
-%%% @doc
-%%%
+%%%----------------------------------------------------------------
+%%% @author Trey Evans <lewis.r.evans@gmail.com>
+%%% @copyright 2009 Trey Evans
 %%% @end
-%%% Created : 28 Sep 2009 by trey <trey@trey-laptop>
-%%%-------------------------------------------------------------------
+%%%----------------------------------------------------------------
 -module(http_resource_registry).
 
 -behaviour(gen_server).
 
 %% API
--export([start_link/1, store/4, fetch/1, remove/1]).
+-export([start_link/1, store/3, fetch/1, remove/1]).
 
 %% gen_server callbacks
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2,
@@ -23,20 +20,55 @@
 %%% API
 %%%===================================================================
 
-store(Name, BUri, RName, TName) ->
-  gen_server:call({global, ?SERVER}, {store, Name, {BUri, RName, TName}}).
+%% @type uri() = term().
+%% A uri, as from uri:from_string/1.
+%% @type resource_uri() = uri().
+%% The uri of the resource.
+%% @type singular_element_name() = string().
+%% The single element name in a resource's xml document.
+%% @type resource_configuration() = {resource_uri(), singular_element_name()}
 
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Stores a resource configuration
+%%
+%% @spec store(Name, RUri, TName) -> ok
+%%         Name = string() | atom()
+%%         RUri = resource_uri()
+%%         TName = singular_element_name()
+%% @end
+store(Name, RUri, TName) ->
+  gen_server:call({global, ?SERVER}, {store, Name, {RUri, TName}}).
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Returns a stored resource configuration.
+%%
+%% @spec fetch(Name) -> resource_configuration()
+%%         Name = string() | atom()
+%% @end
 fetch(Name) ->
   gen_server:call({global, ?SERVER}, {fetch, Name}).
 
+%%--------------------------------------------------------------------
+%% @doc
+%% Removes a stored resource configuration.
+%%
+%% @spec remove(Name) -> ok()
+%%         Name = string() | atom()
+%% @end
 remove(Name) ->
   gen_server:call({global, ?SERVER}, {remove, Name}).
 
 %%--------------------------------------------------------------------
+%% @private
 %% @doc
 %% Starts the server
 %%
-%% @spec start_link() -> {ok, Pid} | ignore | {error, Error}
+%% @spec start_link(Args) -> {ok, Pid} | ignore | {error, Error}
+%%         Args = [DictElement]
+%%         DictElement = {string() | atom(), resource_configuration()}
 %% @end
 %%--------------------------------------------------------------------
 start_link(Args) ->
