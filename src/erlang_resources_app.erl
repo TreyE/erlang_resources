@@ -2,6 +2,14 @@
 %%% @author Trey Evans <lewis.r.evans@gmail.com>
 %%% @copyright 2009 Trey Evans
 %%% @end
+%%% @doc
+%%% When starting this application, you may configure 
+%%% http_resource definitions to be automatically loaded.
+%%% If you set the application environment variable:
+%%% {erlang_resources, http_resources} to a set of
+%%% {@link resource_settings()}, it will be loaded automatically
+%%% when you call application:start/1.
+%%% @end
 %%%----------------------------------------------------------------
 -module(erlang_resources_app).
 
@@ -9,6 +17,11 @@
 
 %% Application callbacks
 -export([start/2, stop/1]).
+
+%% @type resource_config_entry() = {string() | atom(), http_resource_registry:resource_configuration()}.
+%% A resource configuration entry, to be stored in the registry.
+%% @type resource_settings() = [resource_config_entry()].
+%% A list of resource configuration entries.
 
 %%%===================================================================
 %%% Application callbacks
