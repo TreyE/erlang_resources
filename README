@@ -1,0 +1,8 @@
+===== erlang_resources =====
+(C) 2009 Lewis R. Evans IV
+ 
+A simple REST resource consumer for erlang.
+ 
+First and foremost, it's important to note that this uses Erlware.org's Sinan,
+so if you want to be able to build/install it, you will need Faxien and Sinan
+installed.
