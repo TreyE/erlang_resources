@@ -174,4 +174,6 @@ code_change(_OldVsn, State, _Extra) ->
 
 -ifdef(TESTING).
 
+  init_test() -> ?assertEqual(init([]), dict:new()).
+
 -endif.
