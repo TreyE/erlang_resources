@@ -10,7 +10,8 @@
               http_resource_registry]},
    {registered,[erlang_resources_sup, http_resource_registry]},
    {versioned_dependencies, [
-     {inets,"1.5", gte}
+     {inets,"1.5", gte},
+     {eunit, "2.1", gte}
    ]},
    {applications, [kernel, stdlib, inets]},
    {mod, {erlang_resources_app,[]}},
