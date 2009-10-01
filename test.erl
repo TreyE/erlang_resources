@@ -22,4 +22,5 @@ main([String]) ->
   end, 
   Apps)),
   RDir = filename:join(PRoot, "test_reports"),
-  eunit:test(Modules, [{report, {eunit_surefire,[{dir, RDir}]}}]).
+  eunit:test(Modules, [{report, {eunit_surefire,[{dir, RDir}]}}]),
+  0.
