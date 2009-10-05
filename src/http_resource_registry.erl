@@ -182,4 +182,10 @@ init_with_args_test() ->
   ExpectedDict = dict:from_list(IArgs),
   {ok, ExpectedDict} = init(IArgs).
 
+fetch_value_test() ->
+  IArgs = [{something, fred}],
+  ExpectedState = dict:from_list(IArgs),
+  {ok, ExpectedState} = init(IArgs),
+  {reply, fred, ExpectedState} = handle_call({fetch, something}, [], ExpectedState).
+
 -endif.
