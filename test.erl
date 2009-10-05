@@ -12,7 +12,7 @@ main([String]) ->
     end,
     sin_build_config:get_value(BRef, "project.apps")
   ),
-  Paths = lists:map(fun(App) -> 
+  _Paths = lists:map(fun(App) -> 
       code:add_pathsa(sin_build_config:get_value(BRef, "apps." ++ App ++ ".code_paths"))
     end,
     Apps
