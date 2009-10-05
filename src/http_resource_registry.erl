@@ -174,6 +174,12 @@ code_change(_OldVsn, State, _Extra) ->
 
 -ifdef(TESTING).
 
-  init_test() -> ?assertEqual(init([]), dict:new()).
+init_test() -> 
+  ?assertEqual(init([]), {ok, dict:new()}).
+
+init_with_args_test() ->
+  IArgs = [{something, fred}],
+  ExpectedDict = dict:from_list(IArgs),
+  {ok, ExpectedDict} = init(IArgs).
 
 -endif.

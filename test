@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 BUILD_DIR=`pwd`
-@rm -Rf ./test_reports
-@mkdir ./test_reports
-@sinan clean
+rm -Rf ./test_reports
+mkdir ./test_reports
+sinan clean
 /usr/local/erlware/erts-5.7.2/bin/escript test.erl ${BUILD_DIR}
 
 exit 0
