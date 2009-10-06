@@ -3,7 +3,7 @@
 %%% @copyright 2009 Trey Evans
 %%% @end
 %%%----------------------------------------------------------------
--module(xmerl_simple).
+-module(simple_xmerl).
 
 -export([xml_in/1, xml_out/2]).
 
