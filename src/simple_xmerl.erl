@@ -75,7 +75,9 @@ xml_in(XmlStr) when is_binary(XmlStr) ->
   xml_in(binary_to_list(XmlStr));
 xml_in(XmlStr) when is_list(XmlStr) ->
   case xmerl_scan:string(XmlStr) of
-  {XmerlStructure, _ } -> process_structure(XmerlStructure);
+  {XmerlStructure, _ } -> 
+    [CleanStructure] = xmerl:export_simple([XmerlStructure], xmerl_cleanup_parser),
+      process_structure(CleanStructure);
   _ -> ok
   end.
 

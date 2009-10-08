@@ -7,7 +7,8 @@
               erlang_resources_sup,
               http_resource_request,
               simple_xmerl,
-              http_resource_registry]},
+              http_resource_registry,
+              xmerl_cleanup_parser]},
    {registered,[erlang_resources_sup, http_resource_registry]},
    {versioned_dependencies, [
      {inets,"1.5", gte},
