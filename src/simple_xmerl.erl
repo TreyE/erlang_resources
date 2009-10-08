@@ -83,10 +83,10 @@ xml_in(XmlStr) when is_list(XmlStr) ->
 
 empty_dict(Dict) -> dict:size(Dict) == 0.
 
-process_structure(#xmlElement{content = Contents} = Ele) -> 
+process_structure(#xmlElement{content = Contents}) -> 
   case children_type(Contents) of
       empty -> dict:new();
-      false -> process_text_children(Ele);
+      false -> Contents;
       true -> dictify(
           lists:map(fun process_node/1, Contents),
           dict:new()
@@ -105,40 +105,14 @@ process_node(#xmlElement{} = Ele) ->
   {element_name(Ele), process_structure(Ele)}.
 
 children_type([]) -> empty;
-children_type(Children) when is_binary(Children) -> false;
-children_type(CList) -> lists:any(fun is_not_text_element/1, CList).
-
-process_text_children(#xmlElement{content = Contents} = Child) -> 
-  case get_attribute_value(type, Child) of 
-    "integer" -> integer_cast(binary_to_list(Contents));
-    "string" -> Contents;
-    undefined -> Contents;
-    _ -> Contents
-  end.
+children_type(CList) when is_list(CList) -> lists:any(fun is_not_text_element/1, CList);
+children_type(_) -> false.
 
 is_not_text_element(#xmlElement{} = _Ele) -> true;
 is_not_text_element(_) -> false.
 
 element_name(#xmlElement{name = Name}) when is_atom(Name) -> atom_to_list(Name);
 element_name(#xmlElement{name = Name}) -> Name.
-
-integer_cast(String) -> 
-  {Int, _} = string:to_integer(String),
-  Int.
-
-get_attribute_value(Name, #xmlElement{attributes = Attrs}) -> 
-  AttributesList = lists:filter( attribute_selection_function(Name), Attrs ),
-  case length(AttributesList) of
-    0 -> undefined;
-    _ -> 
-      Attr = lists:nth(1, AttributesList),
-      Attr#xmlAttribute.value
-  end.
-
-attribute_selection_function(Name) ->
-  fun(X) ->
-    X#xmlAttribute.name == Name
-  end.
 
 -ifdef(TESTING).
 
@@ -171,6 +145,7 @@ more_complex_content_parser_test() ->
     }
   ]),
   Result = (xml_in(XmlText)),
+  ?assertEqual(<<"fred">>, lists:nth(2, dict:fetch("process", Result))),
   ?assertEqual(ExpectedData, Result).
 
 

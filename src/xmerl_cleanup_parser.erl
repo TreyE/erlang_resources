@@ -18,11 +18,11 @@
 
 '#root#'(Data, _Attrs, [], _E) -> Data.
 
-'#element#'(_Tag, _Data, _Attrs, _Parents, #xmlElement{} = E) ->
+'#element#'(_Tag, _Data, Attrs, _Parents, #xmlElement{} = E) ->
 Contents = E#xmlElement.content,
 NewContent = case has_children(Contents) of
   empty -> [];
-  false -> list_to_binary(maptext(Contents, []));
+  false -> cast_text(maptext(Contents, []), Attrs);
   true -> lists:map(
     fun process_element/1, 
     lists:filter(fun no_text/1, E#xmlElement.content)
@@ -31,6 +31,12 @@ end,
 E#xmlElement{
   content = NewContent
 }.
+
+cast_text(Text, Attrs) ->
+  case xmerl_lib:find_attribute(type, Attrs) of
+    {value, "integer"} -> integer_cast(Text);
+    _ -> list_to_binary(Text) 
+  end.
 
 process_element(#xmlElement{name = Name, attributes = Attrs, parents = Parents, content = Contents} = E) ->
   '#element#'(Name, Contents, Attrs, Parents, E).
@@ -46,6 +52,10 @@ is_element(_) -> false.
 
 no_text(#xmlText{}) -> false;
 no_text(_) -> true.
+
+integer_cast(String) ->
+  {Int, _} = string:to_integer(String),
+  Int.
 
 -ifdef(TESTING).
 simple_xml_in_test() ->
