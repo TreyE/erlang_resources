@@ -22,12 +22,21 @@
 Contents = E#xmlElement.content,
 NewContent = case has_children(Contents) of
   empty -> [];
-  false -> E;
-  true -> lists:filter(fun no_text/1, E#xmlElement.content)
+  false -> list_to_binary(maptext(Contents, []));
+  true -> lists:map(
+    fun process_element/1, 
+    lists:filter(fun no_text/1, E#xmlElement.content)
+  )
 end,
 E#xmlElement{
   content = NewContent
 }.
+
+process_element(#xmlElement{name = Name, attributes = Attrs, parents = Parents, content = Contents} = E) ->
+  '#element#'(Name, Contents, Attrs, Parents, E).
+
+maptext([#xmlText{value = TVal}|Rest], Acc) -> maptext(Rest, TVal ++ Acc);
+maptext([], Acc) -> Acc.
 
 has_children([]) -> empty;
 has_children(Contents) -> lists:any(fun is_element/1, Contents).
@@ -44,7 +53,7 @@ simple_xml_in_test() ->
   {XmerlStructure, _} = xmerl_scan:string(XmlStringWithDecl),
   [CleanStructure] = xmerl:export_simple([XmerlStructure], xmerl_cleanup_parser),
   FNode = lists:nth(1, CleanStructure#xmlElement.content),
-  TNode = lists:nth(1, FNode#xmlElement.content),
+  TNode = FNode#xmlElement.content,
   ?assertEqual(fred, FNode#xmlElement.name),
-  ?assertEqual("\njake\t\n", TNode#xmlText.value).
+  ?assertEqual(<<"\njake\t\n">>, TNode).
 -endif.

@@ -105,26 +105,19 @@ process_node(#xmlElement{} = Ele) ->
   {element_name(Ele), process_structure(Ele)}.
 
 children_type([]) -> empty;
+children_type(Children) when is_binary(Children) -> false;
 children_type(CList) -> lists:any(fun is_not_text_element/1, CList).
 
-process_text_children(#xmlElement{} = Child) -> 
+process_text_children(#xmlElement{content = Contents} = Child) -> 
   case get_attribute_value(type, Child) of 
-    "integer" -> integer_cast(join_text_children(Child));
-    "string" -> list_to_binary(join_text_children(Child));
-    undefined -> list_to_binary(join_text_children(Child));
-    _ -> list_to_binary(join_text_children(Child))
+    "integer" -> integer_cast(binary_to_list(Contents));
+    "string" -> Contents;
+    undefined -> Contents;
+    _ -> Contents
   end.
 
 is_not_text_element(#xmlElement{} = _Ele) -> true;
 is_not_text_element(_) -> false.
-
-join_text_children(#xmlElement{} = Child) ->
-    string:join(
-        lists:map(fun text_value/1, Child#xmlElement.content),
-      ""
-    ).
-
-text_value(#xmlText{ value = Val }) -> Val.
 
 element_name(#xmlElement{name = Name}) when is_atom(Name) -> atom_to_list(Name);
 element_name(#xmlElement{name = Name}) -> Name.
