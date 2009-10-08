@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 BUILD_DIR=`pwd`
+ERL_LOCATION=`which erl`
+ERLDIR_LOCATION=`dirname ${ERL_LOCATION}`
 rm -Rf ./test_reports
 mkdir ./test_reports
 sinan clean
-/usr/local/erlware/erts-5.7.2/bin/escript test.erl ${BUILD_DIR} 2>&1 > build.log && exit 0
+${ERLDIR_LOCATION}/../erts-5.7.2/bin/escript test.erl ${BUILD_DIR} 2>&1 | tee build.log && exit 0
