@@ -88,7 +88,7 @@ process_structure(#xmlElement{content = Contents} = Ele) ->
       empty -> dict:new();
       false -> process_text_children(Ele);
       true -> dictify(
-          lists:map(fun process_node/1, lists:filter(fun elements_only/1, Contents)),
+          lists:map(fun process_node/1, Contents),
           dict:new()
         )
   end.
@@ -103,12 +103,6 @@ dictify([], Dict) -> Dict.
 
 process_node(#xmlElement{} = Ele) ->
   {element_name(Ele), process_structure(Ele)}.
-
-elements_only(#xmlElement{}) -> true;
-elements_only(_) -> false.
-
-no_empty_lists([]) -> false;
-no_empty_lists(_) -> true.
 
 children_type([]) -> empty;
 children_type(CList) -> lists:any(fun is_not_text_element/1, CList).
@@ -126,7 +120,7 @@ is_not_text_element(_) -> false.
 
 join_text_children(#xmlElement{} = Child) ->
     string:join(
-        lists:filter(fun no_empty_lists/1, lists:map(fun text_value/1, Child#xmlElement.content)),
+        lists:map(fun text_value/1, Child#xmlElement.content),
       ""
     ).
 

@@ -22,7 +22,7 @@
 Contents = E#xmlElement.content,
 NewContent = case has_children(Contents) of
   empty -> [];
-  false -> Contents;
+  false -> E;
   true -> lists:filter(fun no_text/1, E#xmlElement.content)
 end,
 E#xmlElement{
@@ -40,9 +40,11 @@ no_text(_) -> true.
 
 -ifdef(TESTING).
 simple_xml_in_test() ->
-  XmlStringWithDecl = "<?xml version=\"1.0\"?>\n\t <rootnode>\n<fred>jake</fred>\n</rootnode>",
+  XmlStringWithDecl = "<?xml version=\"1.0\"?>\n\t <rootnode>\n<fred>\njake\t\n</fred>\n</rootnode>",
   {XmerlStructure, _} = xmerl_scan:string(XmlStringWithDecl),
   [CleanStructure] = xmerl:export_simple([XmerlStructure], xmerl_cleanup_parser),
   FNode = lists:nth(1, CleanStructure#xmlElement.content),
-  ?assertEqual(fred, FNode#xmlElement.name).
+  TNode = lists:nth(1, FNode#xmlElement.content),
+  ?assertEqual(fred, FNode#xmlElement.name),
+  ?assertEqual("\njake\t\n", TNode#xmlText.value).
 -endif.
