@@ -5,61 +5,13 @@
 %%%----------------------------------------------------------------
 -module(simple_xmerl).
 
--export([xml_in/1, xml_out/2]).
+-export([xml_in/1]).
 
 -include("erlang_resources_common.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
 
 %% @type
 %% dictionary() = term(). as returned by dict:new()
-
-%%--------------------------------------------------------------------
-%% @doc
-%% Parses a dictionary with a tag name out into an xml document.
-%%
-%% @spec xml_out(TName, Dict) -> string()
-%%          TName = string()
-%%          Dict = dictionary()
-%% @end
-%%--------------------------------------------------------------------
-xml_out(TName, Dict) ->
-  case empty_dict(Dict) of
-  false -> lists:flatten(
-   xmerl:export_simple(
-   [{list_to_atom(TName), tagify_dict( Dict)}],
-   xmerl_xml)
-  );
-  true -> lists:flatten(
-   xmerl:export_simple(
-   [list_to_atom(TName)],
-   xmerl_xml)
-  )
-  end.
-
-tagify_dict(Dict) ->
-  KeyList = dict:fetch_keys(Dict),
-  tagify_list(Dict, KeyList, []).
-
-tagify_list(Dict, [Key|Rest], RList) ->
-  Val = dict:fetch(Key, Dict),
-  NList = case is_list(Val) of
-    false -> 
-      lists:append(RList, [{list_to_atom(Key), process_to_content(Val)}]);
-    true ->
-      lists:append(RList, lists:map(tagify_with_name(Key), Val)) 
-  end, 
-  tagify_list(Dict, Rest, NList);
-tagify_list(_, [], RList) -> RList.
-
-tagify_with_name(TName) ->
-  fun(X) ->
-    {list_to_atom(TName), process_to_content(X)}
-  end.
-
-process_to_content(Val) when is_binary(Val) -> [binary_to_list(Val)];
-process_to_content(Val) when is_float(Val) -> [float_to_list(Val)];
-process_to_content(Val) when is_integer(Val) -> [integer_to_list(Val)];
-process_to_content(Val) -> tagify_dict(Val).
 
 
 %%--------------------------------------------------------------------
@@ -80,8 +32,6 @@ xml_in(XmlStr) when is_list(XmlStr) ->
       process_structure(CleanStructure);
   _ -> ok
   end.
-
-empty_dict(Dict) -> dict:size(Dict) == 0.
 
 process_structure(#xmlElement{content = Contents}) -> 
   case children_type(Contents) of
@@ -147,37 +97,4 @@ more_complex_content_parser_test() ->
   Result = (xml_in(XmlText)),
   ?assertEqual(<<"fred">>, lists:nth(2, dict:fetch("process", Result))),
   ?assertEqual(ExpectedData, Result).
-
-
-simple_xml_out_test() ->
-  ExpectedString = "<?xml version=\"1.0\"?><root-node23/>",
-  Data = dict:new(),
-  Result = xml_out("root-node23", Data),
-  ?assertEqual(ExpectedString, Result).
-
-complex_xml_out_test() ->
-  ExpectedString = "<?xml version=\"1.0\"?><rootnode><propertystring>HI</propertystring><propertyint>1</propertyint></rootnode>",
-  Data = dict:from_list([
-    {"propertyint", 1},
-    {"propertystring", <<"HI">>}
-  ]),
-  Result = xml_out("rootnode", Data),
-  ?assertEqual(ExpectedString, Result).
-
-more_complex_content_out_test() ->
-  ExpectedString = "<?xml version=\"1.0\"?><processes><process><logfile>/tmp/garbiage</logfile><commandstring>tail -f /var/log/messages</commandstring><category>Testing</category></process><process>fred</process><process>jake</process></processes>",
-  Data = dict:from_list([
-    {
-      "process", 
-      [dict:from_list([
-        {"logfile", <<"/tmp/garbiage">>},
-        {"category", <<"Testing">>},
-        {"commandstring", <<"tail -f /var/log/messages">>}
-      ]),
-      <<"fred">>, <<"jake">>]
-    }
-  ]),
-  Result = xml_out("processes", Data),
-  ?assertEqual(ExpectedString, Result).
-
 -endif.
