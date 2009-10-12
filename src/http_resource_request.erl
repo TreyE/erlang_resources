@@ -20,6 +20,7 @@
 
 %% @type resource_id() = string().
 %% @type dictionary() = term(). as returned by dict:new()
+%% @type element() = term(). as used by xmerl:export_simple_content().
 
 %%--------------------------------------------------------------------
 %% @doc
