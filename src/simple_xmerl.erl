@@ -5,13 +5,27 @@
 %%%----------------------------------------------------------------
 -module(simple_xmerl).
 
--export([xml_in/1]).
+-export([xml_in/1, xml_out/1]).
 
 -include("erlang_resources_common.hrl").
 -include_lib("xmerl/include/xmerl.hrl").
 
 %% @type
 %% dictionary() = term(). as returned by dict:new()
+%% element() = term(). as expected by xmerl:export_simple_content()
+
+
+%%--------------------------------------------------------------------
+%% @doc
+%% Produces an XML document from a data structure.
+%%
+%% @spec xml_out(Data) -> dictionary()
+%%          Data = element()
+%% @end
+xml_out(Data) ->
+  lists:flatten( 
+    xmerl:export_simple_content([Data], xmerl_xml)
+  ).
 
 
 %%--------------------------------------------------------------------
@@ -61,7 +75,7 @@ children_type(_) -> false.
 is_not_text_element(#xmlElement{} = _Ele) -> true;
 is_not_text_element(_) -> false.
 
-element_name(#xmlElement{name = Name}) when is_atom(Name) -> atom_to_list(Name);
+element_name(#xmlElement{name = Name}) when is_list(Name) -> list_to_atom(Name);
 element_name(#xmlElement{name = Name}) -> Name.
 
 -ifdef(TESTING).
@@ -76,8 +90,8 @@ simple_xml_in_test() ->
 complex_xml_in_test() ->
   XmlStringWithDecl = "<?xml version=\"1.0\"?><rootnode><propertyint type=\"integer\">1</propertyint>\n<propertystring>HI</propertystring></rootnode>",
   ExpectedData = dict:from_list([
-    {"propertyint", 1},
-    {"propertystring", <<"HI">>}
+    {propertyint, 1},
+    {propertystring, <<"HI">>}
   ]),
   ?assertEqual(ExpectedData, xml_in(XmlStringWithDecl)).
 
@@ -85,16 +99,16 @@ more_complex_content_parser_test() ->
   XmlText = "<?xml version='1.0' standalone='yes'?>\n<processes>\n<process>\n<logfile>/tmp/garbiage</logfile>\n<category>Testing</category>\n<commandstring>tail -f /var/log/messages</commandstring>\n</process>\n<process>fred</process>\n<process>jake</process>\n</processes>\n",
   ExpectedData = dict:from_list([
     {
-      "process", 
+      process, 
       [dict:from_list([
-        {"logfile", <<"/tmp/garbiage">>},
-        {"category", <<"Testing">>},
-        {"commandstring", <<"tail -f /var/log/messages">>}
+        {logfile, <<"/tmp/garbiage">>},
+        {category, <<"Testing">>},
+        {commandstring, <<"tail -f /var/log/messages">>}
       ]),
       <<"fred">>, <<"jake">>]
     }
   ]),
   Result = (xml_in(XmlText)),
-  ?assertEqual(<<"fred">>, lists:nth(2, dict:fetch("process", Result))),
+  ?assertEqual(<<"fred">>, lists:nth(2, dict:fetch(process, Result))),
   ?assertEqual(ExpectedData, Result).
 -endif.

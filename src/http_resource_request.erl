@@ -10,7 +10,7 @@
 -include("erlang_resources_common.hrl").
 
 -define(HTTP_REQUEST_OPTS, [
-{relaxed, true}
+  {relaxed, true}
 ]).
 
 -define(REQUEST_OPTS, [
@@ -24,30 +24,30 @@
 %%--------------------------------------------------------------------
 %% @doc
 %% Create a single resource.
-%% @spec create(ResourceConfig, Dict) -> dictionary()
+%% @spec create(ResourceConfig, Record) -> dictionary()
 %%       ResourceConfig = http_resource_registry:resource_configuration()
-%%       Dict = dictionary()
+%%       Rec = element()
 %% @end
 %%--------------------------------------------------------------------
-create({RUri, RTagName}, Dict) ->
-  Body = xmerl_simple:xml_out(RTagName, Dict),
+create({RUri, _}, Record) ->
+  Body = simple_xmerl:xml_out(Record),
   Uri = all_resources_uri(RUri),
   case make_bodied(Uri, post, Body) of
-    {ok, {_, RBody}} -> xmerl_simple:xml_in(RBody);
+    {ok, {_, RBody}} -> simple_xmerl:xml_in(RBody);
     A -> A
   end.
   
 %%--------------------------------------------------------------------
 %% @doc
 %% Update a single resource.
-%% @spec update(ResourceConfig, RId, Dict) -> ok
+%% @spec update(ResourceConfig, RId, Record) -> ok
 %%       ResourceConfig = http_resource_registry:resource_configuration()
 %%       RId = resource_id()
-%%       Dict = dictionary()
+%%       Record = element()
 %% @end
 %%--------------------------------------------------------------------
-update({RUri, RTagName}, RId, Dict) ->
-  Body = xmerl_simple:xml_out(RTagName, Dict),
+update({RUri, _}, RId, Record) ->
+  Body = simple_xmerl:xml_out(Record),
   Uri = single_resource_uri(RUri, RId),
   case make_bodied(Uri, put, Body) of
     {ok, _} -> ok;
@@ -80,7 +80,7 @@ delete({RUri, _}, RId) ->
 fetch({RUri, _}, RId) ->
   Uri = single_resource_uri(RUri, RId),
   case make_simple_request(Uri, get) of
-    {ok, {_, Body}} -> xmerl_simple:xml_in(Body);
+    {ok, {_, Body}} -> simple_xmerl:xml_in(Body);
     A -> A
   end.
 
@@ -94,7 +94,7 @@ fetch({RUri, _}, RId) ->
 %%--------------------------------------------------------------------
 list_all({RUri, _}) ->
     {ok, {_, Body}} = make_simple_request(all_resources_uri(RUri), get),
-    xmerl_simple:xml_in(Body).
+    simple_xmerl:xml_in(Body).
 
 make_simple_request(Url, Method) ->
   http:request(Method, {uri:to_string(Url), [{"User-Agent", "erlang"}]}, ?HTTP_REQUEST_OPTS, ?REQUEST_OPTS).
@@ -148,33 +148,40 @@ clean_base(Uri) ->
 
 -ifdef(TESTINGHTTP).
   simple_list_test() ->
+    ensure_inets(),
     Uri = all_resources_uri(uri:from_string("http://testing-resources/host_users")),
     {ok, {Status, Body}}= make_simple_request(Uri, get),
-    Records = xmerl_simple:xml_in(Body),
-    RList = dict:fetch("host-user", Records),
+    Records = simple_xmerl:xml_in(Body),
+    RList = dict:fetch('host-user', Records),
     ?assert(is_list(RList)),
     ?assertEqual(200, Status),
     ?assert(is_binary(Body)).
    
 
   create_test() ->
-    VDict = dict:from_list([
-      {"account-name", <<"test">>},
-      {"host", <<"test">>}
-    ]),
-    UDict = dict:from_list([
-      {"host", <<"somebody">>}
-    ]),
+    ensure_inets(),
+    VRec = {'host-user', [
+      {'account-name', ["test"]},
+      {host, ["test"]}
+    ]},
+    UDict = {'host-user', [
+      {host, ["somebody"]}
+    ]},
     BLoc = {uri:from_string("http://testing-resources/host_users"), "host-user"},
-    ObjDict = create(BLoc, VDict),
-    RId = integer_to_list(dict:fetch("id", ObjDict)),
-    ?assertEqual(<<"test">>, dict:fetch("host", ObjDict)),
+    ObjDict = create(BLoc, VRec),
+    RId = integer_to_list(dict:fetch(id, ObjDict)),
+    ?assertEqual(<<"test">>, dict:fetch(host, ObjDict)),
     UpObjResp = update(BLoc, RId, UDict),
     ?assertEqual(ok, UpObjResp),
     UpObj = fetch(BLoc, RId),
-    ?assertEqual(<<"somebody">>, dict:fetch("host", UpObj)),
+    ?assertEqual(<<"somebody">>, dict:fetch(host, UpObj)),
     DelObjResp = delete(BLoc, RId),
     ?assertEqual(ok, DelObjResp).
+
+ensure_inets() ->
+  case (catch inets:start()) of
+    _ -> ok
+  end.
 -endif.
 
 -endif.
